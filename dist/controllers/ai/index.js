@@ -440,22 +440,30 @@ exports.streamChat = (0, express_async_handler_1.default)(async (req, res) => {
             }
             return;
         }
-        // Stream response directly to client with error handling
+        // Stream response using Server-Sent Events format
         try {
-            result.pipeTextStreamToResponse(res, {
-                headers: {
-                    'Content-Type': 'text/plain; charset=utf-8',
-                    'Cache-Control': 'no-cache',
-                    'Connection': 'keep-alive',
-                }
-            });
+            // Set SSE headers
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Connection', 'keep-alive');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
+            // Stream the response using SSE format
+            for await (const chunk of result.textStream) {
+                // Format as Server-Sent Events
+                res.write(`data: ${JSON.stringify({ token: chunk })}\n\n`);
+            }
+            // Send completion signal
+            res.write('data: [DONE]\n\n');
+            res.end();
         }
         catch (streamError) {
             console.error('❌ Error streaming response:', streamError);
             // Fallback: send a simple text response
             if (!res.headersSent) {
-                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                res.write('I apologize, but I encountered an error while processing your request. Please try again.');
+                res.setHeader('Content-Type', 'text/event-stream');
+                res.write(`data: ${JSON.stringify({ token: 'I apologize, but I encountered an error while processing your request. Please try again.' })}\n\n`);
+                res.write('data: [DONE]\n\n');
                 res.end();
             }
         }
