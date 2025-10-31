@@ -18,7 +18,7 @@
     "@google/generative-ai": "^0.24.1",
     "@langchain/community": "^0.3.53",
     "@langchain/google-genai": "^0.2.16",
-    "@mem0/vercel-ai-provider": "^2.0.1",
+    "@mem0/vercel-ai-provider": "^0.0.14",
     "@openrouter/ai-sdk-provider": "^1.1.2",
     "ai": "^5.0.22",
     "axios": "^1.11.0",

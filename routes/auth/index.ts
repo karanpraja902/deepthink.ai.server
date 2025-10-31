@@ -9,7 +9,8 @@ import {
   getCurrentUser,
   googleAuth,
   googleCallback,
-  logout
+  logout,
+  debugCookies
 } from '../../controllers/auth';
 import { authMiddleware } from '../../middleware/auth';
 
@@ -32,7 +33,11 @@ router.get('/me', authMiddleware as any, getCurrentUser);
 
 // Google OAuth routes
 console.log("google route");
-router.get("/google", passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get("/google", passport.authenticate('google', { 
+  scope: ['profile', 'email'],
+  accessType: 'offline',
+  prompt: 'select_account consent'
+}));
 
 router.get('/google/callback', 
   passport.authenticate('google', { session: false, failureRedirect: '/sign-in' }),
@@ -40,7 +45,10 @@ router.get('/google/callback',
 );
 
 // Logout user
-router.post('/logout', logout);
+router.post('/logout',authMiddleware as any, logout);
+
+// Debug cookies endpoint
+router.get('/debug/cookies', debugCookies);
 
 // Update user memory
 router.put('/user/:userId/memory', updateUserMemory);

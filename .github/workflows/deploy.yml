@@ -1,0 +1,65 @@
+name: Server Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'controllers/**'
+      - 'routes/**'
+      - 'models/**'
+      - 'middleware/**'
+      - 'services/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'server.ts'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Type checking
+      run: npx tsc --noEmit
+
+    - name: Build application
+      run: npm run build
+
+    - name: Deploy to Railway
+      uses: bervProject/railway-deploy@v1.0.0
+      with:
+        service: ${{ secrets.RAILWAY_SERVICE }}
+        token: ${{ secrets.RAILWAY_TOKEN }}
+
+    - name: Deploy to Render (Alternative)
+      if: false # Set to true if you want to use Render instead
+      uses: johnbeynon/render-deploy-action@v1.0.0
+      with:
+        service-id: ${{ secrets.RENDER_SERVICE_ID }}
+        api-key: ${{ secrets.RENDER_API_KEY }}
+
+    - name: Create deployment summary
+      run: |
+        echo "## 🚀 Server Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: Successfully deployed to production" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Path**: dist/" >> $GITHUB_STEP_SUMMARY
+
+

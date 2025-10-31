@@ -35,9 +35,9 @@ import {
 
 
 const cloudinaryConfig = {
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 };
 
 // Validate Cloudinary configuration
@@ -77,7 +77,7 @@ const mem0 = createMem0({
   },
   // Optional Mem0 Global Config
   mem0Config: {
-    enable_graph: true,
+    // Configure Mem0 settings here if needed
   },
 });
 

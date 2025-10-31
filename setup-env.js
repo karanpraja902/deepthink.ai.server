@@ -14,7 +14,7 @@ JWT_SECRET=your-super-secret-jwt-key-here-change-this-in-production
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-BACKEND_URL=http://localhost:5000
+BACKEND_URL=https://deepseek-ai-server.vercel.app
 
 # Cloudinary Configuration
 CLOUDINARY_CLOUD_NAME=your-cloud-name
@@ -22,7 +22,7 @@ CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
 # Client URL (for CORS)
-CLIENT_URL=http://localhost:3000
+CLIENT_URL=https://deepseek-ai-client.vercel.app
 
 # AI Service Configuration
 GOOGLE_GENERATIVE_AI_API_KEY=your-google-api-key

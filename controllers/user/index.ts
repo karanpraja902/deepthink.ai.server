@@ -48,7 +48,7 @@ export const getUserProfile = asyncHandler(async (req: Request, res: Response): 
 // Update user profile
 export const updateUserProfile = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('updateUserProfile', req.body);
+    console.log('updateUserProfile');
     const { userId } = req.params;
     const { name, avatar, preferences, subscription }: { 
       name?: string; 

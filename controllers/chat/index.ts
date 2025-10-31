@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import Chat from '../../models/Chat';
 import User from '../../models/User';
 import asyncHandler from 'express-async-handler';
-import { nanoid } from 'nanoid';
 import { 
   validateCreateChatRequest, 
   validateAddMessageRequest, 
@@ -14,7 +13,7 @@ import { ApiResponse, IMessage } from '../../types';
 export const createChat = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   try {
     // Validate request body
-    console.log("createChat controller", req.body);
+    console.log("createChat controller");
     const validation = validateCreateChatRequest(req.body);
     if (!validation.success) {
       res.status(400).json({
@@ -27,6 +26,8 @@ export const createChat = asyncHandler(async (req: Request, res: Response): Prom
     console.log("validation:", validation);
     const { userId } = validation.data!;
     
+    // Dynamic import for nanoid (ES module)
+    const { nanoid } = await import('nanoid');
     const chatId = nanoid();
     
     const newChat = new Chat({
@@ -140,7 +141,7 @@ export const getUserChats = asyncHandler(async (req: Request, res: Response): Pr
 export const addMessage = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   try {
     // Validate request body
-    console.log("addMessage:", req.body);
+    console.log("addMessage:");
     const validation = validateAddMessageRequest(req.body);
     if (!validation.success) {
       res.status(400).json({
@@ -150,7 +151,7 @@ export const addMessage = asyncHandler(async (req: Request, res: Response): Prom
       });
       return;
     }
-    console.log("addMessage:", req.body);
+    console.log("addMessage:");
     
     const { id } = req.params;
     console.log("id:", id);

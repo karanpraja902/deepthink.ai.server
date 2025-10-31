@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export const createCheckoutSession = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Creating checkout session backend:', req.body);
+    console.log('Creating checkout session backend:');
     const { priceId, userId, planName, successUrl, cancelUrl } = req.body;
 
     if (!priceId || !userId) {

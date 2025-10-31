@@ -75,7 +75,7 @@ jspm_packages/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+
 
 # Gatsby files
 .cache/
@@ -169,7 +169,7 @@ jspm_packages/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+
 
 # Gatsby files
 .cache/
@@ -211,8 +211,7 @@ yarn-error.log*
 *.tsbuildinfo
 
 # Build outputs
-dist/
-build/
+
 
 # Database files
 *.db
@@ -242,3 +241,4 @@ config/credentials.json
 # Google Cloud credentials
 clever-bee-468418-s7-9d2a25e023ff.json
 *.json
+!vercel.json

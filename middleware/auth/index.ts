@@ -10,7 +10,7 @@ export interface AuthenticatedRequest extends Request {
 
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   // Try to get token from cookie first, then from Authorization header
-  console.log("auth middleware request", req);
+  // console.log("auth middleware request", req);
   console.log("auth middleware cookies", req.cookies);
   let token = req?.cookies?.auth_token;
   console.log("auth middleware token", token);
@@ -26,6 +26,7 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
       success: false,
       error: "No token, authorization denied"
     });
+    console.log("No token, authorization denied");
     return;
   }
 console.log("auth middleware token", token);

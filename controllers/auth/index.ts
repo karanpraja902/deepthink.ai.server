@@ -95,6 +95,7 @@ export const getUserWithMemory = asyncHandler(async (req: Request, res: Response
     const response: ApiResponse<any> = {
       success: true,
       data: {
+        
         user: {
           id: user.id,
           email: user.email,
@@ -119,6 +120,7 @@ export const getUserWithMemory = asyncHandler(async (req: Request, res: Response
 // User login
 export const login = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log("Login requestttt");
     const { email, password } = req.body;
     
     if (!email || !password) {
@@ -130,6 +132,7 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<v
     }
     
     const user = await User.findOne({ email, isActive: true });
+    console.log("user", user);
     
     if (!user) {
       res.status(401).json({ 
@@ -154,18 +157,29 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<v
       userId: user.id,
       email: user.email
     };
+    console.log("login payload", payload);
     
     const token = jwt.sign(
       payload,
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
     );
+    console.log("login token", token);
     
+    // Set secure HTTP-only cookie
+    res.cookie("auth_token", token, {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true, // Required when sameSite is 'none'
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+    });
+
     const response: ApiResponse<any> = {
+      
       success: true,
       message: 'Login successful',
       data: {
-        token,
+        token: token,
         user: {
           id: user.id,
           email: user.email,
@@ -175,6 +189,12 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<v
         }
       }
     };
+    console.log("login response", response);
+    console.log("login response token check:", {
+      hasToken: !!response.data.token,
+      tokenLength: response.data.token?.length,
+      tokenValue: response.data.token
+    });
     
     res.status(200).json(response);
   } catch (error: any) {
@@ -238,6 +258,7 @@ export const updateUserMemory = asyncHandler(async (req: Request, res: Response)
 // User registration
 export const register = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log("Register request");
     const { name, email, password } = req.body;
     
     if (!name || !email || !password) {
@@ -291,14 +312,15 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
     res.cookie("auth_token", token, {
       httpOnly: true,
       sameSite: "none",
-      secure: true,
+      secure: true, // Required when sameSite is 'none'
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
     });
 
     const response: ApiResponse<any> = {
       success: true,
       message: "User registered successfully",
       data: {
-        token,
+        token: token,
         user: {
           id: user.id,
           name: user.name,
@@ -366,8 +388,11 @@ export const googleAuth = (req: Request, res: Response): void => {
 // Google OAuth callback
 export const googleCallback = asyncHandler(async (req: any, res: Response): Promise<void> => {
   try {
-    console.log("google callback request", req);
-    console.log({"request": req.user.email});
+    console.log("=== Google OAuth Callback ===");
+    console.log("User from Google:", req.user);
+    console.log("Request headers:", req.headers);
+    console.log("User agent:", req.get('User-Agent'));
+    
     const token = jwt.sign(
       { userId: req.user.id, email: req.user.email },
       process.env.JWT_SECRET || 'your-secret-key',
@@ -375,26 +400,141 @@ export const googleCallback = asyncHandler(async (req: any, res: Response): Prom
     );
     console.log("google callback token", token);
     
-    res.cookie("auth_token", token, {
+    // Set CORS headers explicitly - allow the requesting origin if it's in our allowed list
+    const allowedOrigins = [
+      'https://deepseek-ai-web.vercel.app',
+      'https://deepseek-ai-client.vercel.app',
+      'http://localhost:3000',
+      process.env.CLIENT_URL
+    ].filter(Boolean);
+    
+    const requestOrigin = req.get('Origin') || req.get('Referer');
+    console.log('All allowed origins:', allowedOrigins);
+    console.log('Request origin:', requestOrigin);
+    
+    // For Google OAuth, the origin is accounts.google.com, so use production client URL
+    let allowedOrigin;
+    if (requestOrigin && requestOrigin.includes('accounts.google.com')) {
+      allowedOrigin = process.env.NODE_ENV === 'production' ? 'https://deepseek-ai-client.vercel.app' : 'http://localhost:3000';
+    } else {
+      allowedOrigin = allowedOrigins.find(origin => 
+        requestOrigin && requestOrigin.startsWith(origin)
+      ) || (process.env.NODE_ENV === 'production' ? 'https://deepseek-ai-client.vercel.app' : 'http://localhost:3000');
+    }
+    
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Origin', allowedOrigin);
+    
+    // Add headers to reduce bounce tracking detection
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '0');
+    
+    console.log('OAuth callback - Request origin:', requestOrigin);
+    console.log('OAuth callback - Allowed origin set to:', allowedOrigin);
+    
+    // Determine if we're in production and get the correct domain
+    const isProduction = process.env.NODE_ENV === 'production';
+    const clientUrl = process.env.CLIENT_URL || (isProduction ? 'https://deepseek-ai-client.vercel.app' : 'http://localhost:3000');
+    
+    // Enhanced cookie options for better cross-site compatibility
+    const cookieOptions: any = {
       httpOnly: true,
-      sameSite: "none",
-      secure: true,
-    });
+      secure: true, // Always secure for OAuth
+      maxAge: 30* 24 * 60 * 60 * 1000, // 30 days
+      path: '/'
+    };
 
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}?token=${token}`);
+    // In production, use 'none' for cross-site, in development use 'lax'
+    if (isProduction) {
+      cookieOptions.sameSite = 'none';
+      // For production, try to extract domain from client URL for better cookie scope
+      try {
+        const clientDomain = new URL(clientUrl).hostname;
+        // For Vercel apps, set domain to the root domain if it's a subdomain
+        if (clientDomain.includes('.vercel.app')) {
+          cookieOptions.domain = '.vercel.app';
+        }
+      } catch (e) {
+        console.warn('Could not parse client URL for domain:', e);
+      }
+    } else {
+      cookieOptions.sameSite = 'lax';
+    }
+    
+    // Set secure HTTP-only cookie
+    res.cookie("auth_token", token, cookieOptions);
+    
+    console.log("Cookie set with options:", cookieOptions);
+    console.log("Response headers before redirect:", res.getHeaders());
+    
+    // Return JSON response with token instead of redirecting
+    const response: ApiResponse<any> = {
+      success: true,
+      message: 'Google authentication successful',
+      data: {
+        token: token,
+        user: {
+          id: req.user.id,
+          email: req.user.email,
+          name: req.user.name,
+          username: req.user.username,
+          avatar: req.user.avatar,
+          preferences: req.user.preferences,
+        }
+      }
+    };
+    
+    console.log("Sending Google auth response:", response);
+    res.status(200).json(response);
   } catch (error: any) {
     console.error('Google callback error:', error);
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/sign-in?error=auth_failed`);
+    const clientUrl = process.env.CLIENT_URL || (process.env.NODE_ENV === 'production' ? 'https://deepseek-ai-client.vercel.app' : 'http://localhost:3000');
+    res.redirect(`${clientUrl}/sign-in?error=auth_failed`);
   }
 });
 
+// Debug endpoint to check cookie status
+export const debugCookies = (req: Request, res: Response): void => {
+  console.log("Debug cookies endpoint called");
+  console.log("All cookies:", req.cookies);
+  console.log("Headers:", req.headers);
+  
+  res.status(200).json({
+    success: true,
+    data: {
+      cookies: req.cookies,
+      hasAuthToken: !!req.cookies?.auth_token,
+      authTokenLength: req.cookies?.auth_token?.length || 0,
+      userAgent: req.get('User-Agent'),
+      origin: req.get('Origin'),
+      referer: req.get('Referer'),
+      timestamp: new Date().toISOString()
+    }
+  });
+};
+
 // User logout
 export const logout = (req: Request, res: Response): void => {
+  console.log("Logout called - clearing cookies");
+  console.log("Current cookies:", req.cookies);
+  
+  // Clear cookie with the same options used when setting it
   res.clearCookie("auth_token", {
     httpOnly: true,
     sameSite: 'none',
     secure: true
   });
+  
+  // Set cookie to expire immediately as an additional measure
+  res.cookie("auth_token", "", {
+    httpOnly: true,
+    sameSite: 'none',
+    secure: true,
+    expires: new Date(0) // Expire immediately
+  });
+  
+  console.log("Cookies cleared successfully");
   
   res.status(200).json({ 
     success: true,

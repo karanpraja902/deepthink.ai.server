@@ -108,7 +108,7 @@ CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
 # Client URL (for CORS)
-CLIENT_URL=http://localhost:3000
+CLIENT_URL=https://deepseek-ai-client.vercel.app
 ```
 
 ## API Endpoints
