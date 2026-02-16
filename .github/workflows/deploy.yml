@@ -2,7 +2,7 @@ name: Server Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'src/**'
       - 'controllers/**'
@@ -32,7 +32,7 @@ jobs:
         cache-dependency-path: package-lock.json
 
     - name: Install dependencies
-      run: npm ci
+      run: npm install
 
     - name: Type checking
       run: npx tsc --noEmit
